@@ -1,9 +1,9 @@
 import { ArrowRight } from 'lucide-react'
 
-import logoImg from '../assets/ama-logo.svg'
-// import { createRoom } from '../http/create-room'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
+import logoImg from '../assets/ama-logo.svg'
+import { createRoom } from '../http/create-room'
 
 export function CreateRoom() {
   const navigate = useNavigate()
@@ -16,9 +16,9 @@ export function CreateRoom() {
     }
 
     try {
-      // const { roomId } = await createRoom({ theme })
+      const { roomId } = await createRoom({ theme })
 
-      navigate(`/221d8db8-8286-40d8-bc06-a302ec0cd070`)
+      navigate(`/${roomId}`)
     } catch (err) {
       toast.error('Failed to create the room!')
     }

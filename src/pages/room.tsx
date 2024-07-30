@@ -1,12 +1,22 @@
 import { ArrowRight, Share2 } from "lucide-react";
 
-import logoImg from '../assets/ama-logo.svg'
-import { Message } from "../components/message";
+import logoImg from '../assets/ama-logo.svg';
 import { toast } from "sonner";
-import { useParams } from "react-router-dom";
+import { Navigate, useParams } from "react-router-dom";
+import { createMessage } from "../http/create-message";
+import { Messages } from "../components/messages";
+import { Suspense } from "react";
+import { useMutation } from "@tanstack/react-query";
 
 export function Room() {
-  const { id } = useParams<{ id: string }>()
+  const { roomId } = useParams<{ roomId: string }>()
+
+  const { 
+    mutateAsync: requestCreateMessage, 
+    isPending: isCreatingMessage,
+  } = useMutation({
+    mutationFn: createMessage,
+  })
 
   function handleShareRoom() {
     const url = window.location.href.toString()
@@ -20,6 +30,24 @@ export function Room() {
     }
   }
 
+  async function createMessageAction(data: FormData) {
+    const message = data.get('message')?.toString()
+
+    if (!message || !roomId) {
+      return
+    }
+
+    try {
+      await requestCreateMessage({ message, roomId })
+    } catch (err) {
+      toast.error('Failed to create the message!')
+    }
+  }
+
+  if (!roomId) {
+    return <Navigate to="/" replace />
+  }
+
   return (
     <div className="mx-auto max-w-[640px] flex flex-col gap-6 py-10 px-5">
       <div className="flex items-center gap-2 px-3">
@@ -28,7 +56,7 @@ export function Room() {
         <span className="text-sm text-zinc-500 truncate">
           Código da sala:{' '}
           <span className="text-zinc-300">
-            {id}
+            {roomId}
           </span>
         </span>
 
@@ -45,7 +73,7 @@ export function Room() {
       <div className="h-px w-full bg-zinc-900" />
 
       <form 
-        // action={createRoomAction} 
+        action={createMessageAction} 
         className="flex items-center gap-2 bg-zinc-900 p-2 rounded-xl border border-zinc-800 focus-within:ring-1 ring-orange-400 ring-offset-4 ring-offset-zinc-950"
       >
         <input
@@ -56,23 +84,17 @@ export function Room() {
         />
         <button 
           type="submit" 
-          className="bg-orange-400 text-orange-950 px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors hover:bg-orange-500"
+          disabled={isCreatingMessage}
+          className="bg-orange-400 text-orange-950 px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors hover:bg-orange-500 disabled:opacity-60"
         >
           Criar pergunta
           <ArrowRight className="size-4" />
         </button>
       </form>
 
-      <ol className="space-y-8">
-        <Message 
-          text="O que é GoLang e quais são suas principais vantagens em comparação com outras linguagens de programação como Python, Java ou C++?" 
-          amountOfReactions={123} 
-        />
-        <Message 
-          text="Como funcionam as goroutines em GoLang e por que elas são importantes para a concorrência e paralelismo?" 
-          amountOfReactions={82} 
-        />
-      </ol>
+      <Suspense fallback={<p>Carregando...</p>}>
+        <Messages roomId={roomId} />
+      </Suspense>
     </div>
   )
 }
