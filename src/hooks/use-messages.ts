@@ -69,7 +69,9 @@ export function useMessages(roomId: string) {
     }
   }, [queryClient, roomId])
 
-  useWebsocket({ onMessage: onWebhookMessage })
+  useWebsocket({ roomId, onMessage: onWebhookMessage })
 
-  return { messages: data.messages }
+  return { 
+    messages: data.messages.sort((a, b) => b.amountOfReactions - a.amountOfReactions)
+  }
 }

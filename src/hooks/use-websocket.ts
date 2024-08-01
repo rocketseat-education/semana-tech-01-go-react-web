@@ -38,16 +38,15 @@ const webhookMessage = z.discriminatedUnion('kind', [
 export type WebhookMessage = z.infer<typeof webhookMessage>
 
 interface UseWebsocketParams {
+  roomId: string
   onMessage: (message: WebhookMessage) => Promise<void> | void
 }
 
-export function useWebsocket({ onMessage }: UseWebsocketParams) {
+export function useWebsocket({ roomId, onMessage }: UseWebsocketParams) {
   useEffect(() => {
-    const ws = new WebSocket('ws://localhost:8080/subscribe')
+    const ws = new WebSocket(`ws://localhost:8080/subscribe/${roomId}`)
 
-    ws.onopen = () => {
-      console.log('Websocket connected!')
-    }
+    ws.onopen = () => { console.log('Websocket connected!') }
 
     ws.onmessage = (event) => {
       const message = webhookMessage.parse(JSON.parse(event.data));
@@ -58,5 +57,5 @@ export function useWebsocket({ onMessage }: UseWebsocketParams) {
     return () => {
       ws.close();
     };
-  }, [onMessage])
+  }, [onMessage, roomId])
 }
